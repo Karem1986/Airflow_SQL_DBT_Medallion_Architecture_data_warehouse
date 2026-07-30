@@ -1,13 +1,13 @@
-# Instructions to run the Postgres Stored Procedures and retrieve the data using Docker
+# Instructions to run the Stored Procedures and retrieve the data using Docker
 
 Note that these commands will work in a Power Shell CLI:
 
 1. To spin it up after cloning this repo:
         'docker-compose up -d'
-2. To shut it down:
-        'docker-compose down'
-3. To pause it and save laptop memory
+2. To pause it and save laptop CPU:
         'docker-compose stop'
+3. To shut it down:
+        'docker-compose down'
 4. To restart it:
         'docker-compose start'
 5. Clean slate start and make sure everything is as left, old data is wiped and the new data is loaded:
@@ -42,4 +42,4 @@ Name: Any name will do.
 In the Connection tab:
 
 Host name/address: postgres (Because they are on the same Docker network, pgAdmin can resolve the container name directly)
-The rest of information is found in the .env file.
+The rest of information is at the .env file.

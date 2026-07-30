@@ -51,3 +51,6 @@ services: # Docker know what you want him to do, add as many services as you nee
       - ../dbt:/opt/airflow/dbt      # Mounted so the DAG's dbt build task can reach it
     depends_on:
       - postgres
+
+volumes: # What would happen without a volume?
+  postgres_data:
