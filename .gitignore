@@ -1,1 +1,8 @@
 .env
+
+# dbt artifacts and local profile (contains connection details, never committed)
+dbt/profiles.yml
+dbt/target/
+dbt/dbt_packages/
+dbt/logs/
+dbt/.user.yml

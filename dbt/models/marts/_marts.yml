@@ -1,0 +1,33 @@
+version: 2
+
+models:
+  - name: fct_sap_sales_orders
+    description: SAP sales order fact table, Gold layer, one row per order.
+    columns:
+      - name: sap_order_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_retail_transactions
+    description: On-premises retail transaction fact table, Gold layer, one row per transaction line.
+    columns:
+      - name: txn_id
+        tests:
+          - unique
+          - not_null
+
+  - name: fct_daily_revenue_summary
+    description: >
+      Unifies SAP and on-premises revenue into a single daily grain per source
+      system. This is the single source of truth Power BI reports against,
+      replacing two separately-maintained, disagreeing reports.
+    columns:
+      - name: revenue_date
+        tests:
+          - not_null
+      - name: source_system
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['SAP', 'ON_PREM_WMS']

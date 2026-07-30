@@ -7,12 +7,16 @@ Prepal (fictitous name) is a retailer company that makes PFAS environmental frie
 
 The client's data is in a SAP environment and on-premises.
 
-This project demonstrates a production-grade, cost-effective Data Warehouse architecture designed to unify hybrid enterprise data streams specifically an API-driven Cloud ERP (SAP) and an On-Premises Warehouse Management System (WMS) into a Kimball Star Schema optimized for Power BI reporting. I solved two of their problems.
+*The Problem:*
+This project demonstrates a production-grade, cost-effective Data Warehouse architecture designed to "Unify hybrid enterprise data streams (SAP and an On-Premises Warehouse Management System (WMS)) into a Kimball Star Schema optimized for Power BI reporting."
 
-PROBLEM 1: lack of tracking and monitoring in the SQL queries that were classic SQL stored procedures.
-SOLUTION: Migrate to dbt, migration from  SQL store procedures to dbt models, this will also enhance team collaboration, continuous monitoring and automated testing.
+*Problem Breakdown:*
+PROBLEM 1: classic SQL stored procedures cannot be tracked and monitored.
 
-PROBLEM 2: Power BI reports take too much time to make, data analysts have to access the data fom the onpremises DWH but the data is not organized, nor is automated to extract new data from SAP and other onpremises sources.
+SOLUTION: Migrate to dbt, migration from  SQL store procedures to dbt models, this will enhance team collaboration, continuous monitoring and automated testing.
+
+PROBLEM 2: Too much time in extracting the data for the reports than generating the actual reports, data analysts have to access the data fom the on-premises DWH but the data is not organized, data extraction is not automated to extract data from the SAP environment and on-premises sources.
+
 SOLUTION: Apache Airflow for isolated ingestion and automated data pipelines orquestration, a SQL database engine for compute and dbt to manage the Medallion transformation layers, eliminating the need for expensive cloud warehouse licenses while maintaining enterprise data governance.
 
 ## Security best practices
@@ -27,7 +31,23 @@ In order to do the demo of how store procedures work and how this approach is im
 
 ## Orchestration Layer (Airflow DAG)
 
-Airflow acts as the automated heartbeat. It triggers a lightweight Python operator that makes the SAP API HTTP request and executes the on-premises database synchronization, dumping raw data into the Bronze staging area without putting prolonged operational strain on production systems.
+The DAG (`airflow/prepal_ingestion_DAG.py`) runs four tasks:
+
+1. `start_pipeline` — an EmptyOperator marking the entry point.
+2. `extract_sap_orders` and `sync_retail_transactions` — run in parallel via `SQLExecuteQueryOperator`, each calling one Bronze stored procedure (`usp_extract_sap_orders`, `usp_sync_retail_transactions`).
+3. `transform_with_dbt` — once both Bronze loads finish, a `BashOperator` runs `dbt build` against the dbt project in `dbt/`. This single task is what builds the entire Silver and Gold layer: dbt reads the Bronze tables, builds the Silver staging views, then the Gold fact tables, then runs every schema test — all in dependency order, in one command.
+
+Apache Airflow's Task SDK does not run natively on Windows, so it runs the same way it would in a real production deployment: containerized. The `airflow` service in `stored_procedures_dwh-migration/docker-compose.yml` runs Airflow in `standalone` mode (webserver + scheduler + SQLite metadata DB in one process), with the `prepal_postgres_conn` connection injected automatically via the `AIRFLOW_CONN_PREPAL_POSTGRES_CONN` environment variable, no manual setup through the Airflow UI required.
+
+## DBT Medallion Layers
+
+Bronze is the raw output of the stored procedures above: `bronze_sap.sap_sales_orders` and `bronze_onprem.retail_transactions`.
+
+dbt owns everything from here on:
+
+- **Silver** (`dbt/models/staging/`, materialized as views): `stg_sap_sales_orders` and `stg_retail_transactions` — typed, deduplicated, with `retail_transactions` gaining a computed `line_amount` column so downstream models never repeat that calculation.
+- **Gold** (`dbt/models/marts/`, materialized as tables): `fct_sap_sales_orders`, `fct_retail_transactions`, and `fct_daily_revenue_summary` — the last one unions both revenue streams onto a single daily grain, so Power BI reads one trusted number per day instead of two disagreeing reports from two source systems. This is the project's Single Source of Truth.
+- **Tests**: every primary key gets `unique` + `not_null`, and `fct_daily_revenue_summary.source_system` is constrained to `accepted_values`. `dbt build` fails fast on the first broken test, so bad data never reaches the Gold layer Power BI reads from.
 
 ## DBT vs SQL
 
@@ -35,8 +55,8 @@ The transformation of the data (Silver layer) occurs within dbt models, which is
 
 ## Migration Phased Approach
 
-[Phase 1: Baseline] ──> [Phase 2: Airflow] ──> [Phase 3: dbt Migration] (PENDING)
-     (Done)            (Where we are now)            (Next strategic step)
+[Phase 1: Baseline] ──> [Phase 2: Airflow] ──> [Phase 3: dbt Migration]
+        (Done)                (Done)                   (Done)
 
 ## Decopupling Infrastructure from Code for easier debugging
 

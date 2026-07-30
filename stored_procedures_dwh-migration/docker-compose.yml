@@ -2,7 +2,7 @@
 
 version: '3.8' # Docker will know which servant to use for the task!
 
-services: # Docker know what you want him to do! add more if you like:)
+services: # Docker know what you want him to do, add as many services as you need.
   postgres:
     image: postgres:15-alpine # Lightweight image to save disk space!
     container_name: prepal_postgres # 4. Container Identifier
@@ -19,12 +19,35 @@ services: # Docker know what you want him to do! add more if you like:)
     image: dpage/pgadmin4
     container_name: prepal_pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@prepal.com
-      PGADMIN_DEFAULT_PASSWORD: SuperSecurePgAdmin2026!
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
     ports:
       - "8080:80"
     depends_on:
       - postgres
 
-volumes: # What would happen without a volume?
-  postgres_data:
+  airflow:
+    image: apache/airflow:3.3.0
+    container_name: prepal_airflow
+    command: standalone
+    environment:
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false" # Hide Airflow's example DAGs, show only ours
+      # Airflow reads AIRFLOW_CONN_<CONN_ID> env vars as ready-made connections,
+      # so 'prepal_postgres_conn' (used in the DAG) exists with no manual UI setup.
+      AIRFLOW_CONN_PREPAL_POSTGRES_CONN: postgres://${DB_USER}:${DB_PASSWORD}@prepal_postgres:5432/${DB_NAME}
+      # dbt reads these same variables from profiles.yml via env_var()
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      DB_PORT: 5432
+      DB_HOST: prepal_postgres # Inside the Docker network, Postgres is not "localhost"
+      # Installs dbt at container startup. Fine for this demo; a real
+      # deployment would bake this into a custom image instead.
+      _PIP_ADDITIONAL_REQUIREMENTS: dbt-postgres
+    ports:
+      - "8085:8080" # 8080 is already taken by pgAdmin above
+    volumes:
+      - ../airflow:/opt/airflow/dags # This repo's DAG file
+      - ../dbt:/opt/airflow/dbt      # Mounted so the DAG's dbt build task can reach it
+    depends_on:
+      - postgres

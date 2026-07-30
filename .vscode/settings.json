@@ -6,9 +6,10 @@
             "server": "localhost",
             "port": 5432,
             "driver": "PostgreSQL",
-            "name": "Prepal Local Postgres",
+            "name": "Prepal Local Postgress",
             "database": "prepal_dwh",
-            "username": "admin"
+            "username": "admin",
+            "password": "SuperSecurePassword2026!"
         }
     ],
 

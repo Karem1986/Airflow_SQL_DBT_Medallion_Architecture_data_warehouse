@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: bronze_sap
+    schema: bronze_sap
+    description: Raw SAP ERP sales orders, ingested daily by the Airflow DAG via usp_extract_sap_orders.
+    tables:
+      - name: sap_sales_orders
+        description: One row per SAP sales order at extraction time. Truncated and reloaded on every run.
+        columns:
+          - name: sap_order_id
+            description: SAP order identifier.
+
+  - name: bronze_onprem
+    schema: bronze_onprem
+    description: Raw on-premises WMS retail transactions, ingested daily by the Airflow DAG via usp_sync_retail_transactions.
+    tables:
+      - name: retail_transactions
+        description: One row per point-of-sale transaction line at extraction time. Truncated and reloaded on every run.
+        columns:
+          - name: txn_id
+            description: On-premises transaction identifier.

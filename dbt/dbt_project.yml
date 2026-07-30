@@ -1,0 +1,24 @@
+name: 'prepal_dwh'
+version: '1.0.0'
+config-version: 2
+
+profile: 'prepal_dwh'
+
+model-paths: ["models"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  prepal_dwh:
+    staging:
+      +materialized: view
+      +schema: silver
+    marts:
+      +materialized: table
+      +schema: gold

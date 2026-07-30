@@ -1,0 +1,28 @@
+version: 2
+
+models:
+  - name: stg_sap_sales_orders
+    description: Cleaned SAP sales orders, one row per order. Deduplication happens implicitly since the bronze table is truncated and reloaded per run.
+    columns:
+      - name: sap_order_id
+        description: Primary key for a SAP sales order.
+        tests:
+          - unique
+          - not_null
+      - name: net_value
+        description: Order net value, must always be populated for revenue reporting.
+        tests:
+          - not_null
+
+  - name: stg_retail_transactions
+    description: Cleaned retail transactions with a computed line_amount (quantity * unit_price).
+    columns:
+      - name: txn_id
+        description: Primary key for an on-premises transaction line.
+        tests:
+          - unique
+          - not_null
+      - name: line_amount
+        description: quantity * unit_price, computed once here so downstream models never repeat the calculation.
+        tests:
+          - not_null
