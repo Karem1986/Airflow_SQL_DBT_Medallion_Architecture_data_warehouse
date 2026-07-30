@@ -8,7 +8,7 @@ transform_with_dbt — runs dbt build, which built:
 silver.stg_sap_sales_orders, silver.stg_retail_transactions (views)
 gold.fct_sap_sales_orders, gold.fct_retail_transactions, gold.fct_daily_revenue_summary (tables)
 
-Option A — show it already ran (safest, zero live risk):
+Option A — Safest
 
 ```docker exec prepal_postgres psql -U admin -d prepal_dwh -c "SELECT * FROM gold.fct_daily_revenue_summary;"```
 

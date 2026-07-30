@@ -1,7 +1,4 @@
 # Why Docker compose and simply not a local postgres database running locally?
-
-version: '3.8' # Docker will know which servant to use for the task!
-
 services: # Docker know what you want him to do, add as many services as you need.
   postgres:
     image: postgres:15-alpine # Lightweight image to save disk space!

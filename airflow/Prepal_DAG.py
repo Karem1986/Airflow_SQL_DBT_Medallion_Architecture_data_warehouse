@@ -1,17 +1,16 @@
 # Here we have our DAG workflow to run the extraction, load, and transform
-# In a later phase, I will spin up Airflow on port 8085, keeping the laptop lightweight for screen sharing!
 # using the host alias prepal_postgres rather than localhost, ensures that once the Airflow container is live,
 # it can immediately orchestrate our parallel ingestion tasks
 
 import os
 from datetime import datetime, timedelta
 from airflow import DAG
-from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator # type: ignore
-from airflow.providers.standard.operators.empty import EmptyOperator # type: ignore
-from airflow.providers.standard.operators.bash import BashOperator # type: ignore
+from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator 
+from airflow.providers.standard.operators.empty import EmptyOperator 
+from airflow.providers.standard.operators.bash import BashOperator
 
 # In production this path would instead point at wherever the dbt project
-# is deployed inside the Airflow worker image.
+# is deployed inside the Airflow custom image in docker compose.
 DBT_PROJECT_DIR = os.path.normpath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dbt")
 )

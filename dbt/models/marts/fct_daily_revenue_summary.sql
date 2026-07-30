@@ -1,6 +1,5 @@
 -- Gold layer: unifies the SAP (cloud ERP) and on-premises (WMS) revenue streams
--- into a single daily grain, so Power BI reports one number instead of two
--- disagreeing ones per source system.
+-- into a single daily grain, instead of two per data source --> Helps to decrease time Power BI reports building.
 
 with sap_daily as (
 
