@@ -1,4 +1,4 @@
-# Here we have our DAG workflow to run the extraction, load, and transform
+# DAG workflow to run the extraction, load, and transform
 # using the host alias prepal_postgres rather than localhost, ensures that once the Airflow container is live,
 # it can immediately orchestrate our parallel ingestion tasks
 
@@ -9,8 +9,7 @@ from airflow.providers.common.sql.operators.sql import SQLExecuteQueryOperator
 from airflow.providers.standard.operators.empty import EmptyOperator 
 from airflow.providers.standard.operators.bash import BashOperator
 
-# In production this path would instead point at wherever the dbt project
-# is deployed inside the Airflow custom image in docker compose.
+#It points where DBT lives
 DBT_PROJECT_DIR = os.path.normpath(
     os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "dbt")
 )
@@ -39,7 +38,7 @@ with DAG(
 
     extract_sap = SQLExecuteQueryOperator(
         task_id='extract_sap_orders',
-        conn_id='prepal_postgres_conn',  # Injected via AIRFLOW_CONN_PREPAL_POSTGRES_CONN in docker-compose.yml
+        conn_id='prepal_postgres_conn',
         sql="CALL bronze_sap.usp_extract_sap_orders();"
     )
 
